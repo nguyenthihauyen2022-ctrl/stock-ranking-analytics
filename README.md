@@ -18,7 +18,8 @@ tích cần một bước sàng lọc định lượng dựa trên dữ liệu g
 - Dữ liệu lấy từ **SSI FastConnect API**.
 - Endpoint sử dụng: danh sách chứng khoán theo sàn (`securitiesByBoard`) và dữ liệu OHLC ngày (`ohlc`).
 - Các trường lấy về: giá mở cửa, cao nhất, thấp nhất, đóng cửa, khối lượng và giá trị giao dịch.
-- Dữ liệu là dữ liệu thật thu thập từ SSI, không có dữ liệu giả hay dữ liệu mô phỏng.
+- Dữ liệu là dữ liệu thật thu thập từ SSI, không có dữ liệu giả hay dữ liệu mô phỏng trong
+  bộ dữ liệu đi kèm. Riêng các bài kiểm thử tự động dùng dữ liệu giả lập, xem mục 8.
 - Sản phẩm **không** dùng dữ liệu tài khoản cá nhân và **không** gửi lệnh giao dịch.
 
 ## 3. Dữ liệu đi kèm
@@ -102,6 +103,15 @@ Lưu ý:
 python -m pytest
 ```
 
+Bộ kiểm thử gồm 191 test, phủ: công thức chỉ tiêu tài chính, quy tắc xếp hạng và điều kiện đủ
+dữ liệu, phân tích độ nhạy trọng số, tầng SQLite, chuẩn hóa dữ liệu SSI và xử lý lỗi kết nối
+(401, 429, lỗi máy chủ, JSON hỏng).
+
+Lưu ý: dữ liệu trong các test là dữ liệu giả lập, chỉ dùng để kiểm tra logic tính toán, không
+phải dữ liệu thị trường. Test dùng cơ sở dữ liệu tạm và phản hồi giả lập nên không cần mạng,
+không cần API key và không ghi vào `data/market_data.db`. Kết quả xếp hạng trên dashboard được
+tính từ dữ liệu thật thu thập từ SSI.
+
 ## 9. Cấu trúc thư mục
 
 ```
@@ -110,9 +120,9 @@ src/data/       thu thập dữ liệu và lưu SQLite
 src/finance/    tính các chỉ tiêu tài chính
 src/analytics/  chấm điểm, xếp hạng và phân tích độ nhạy
 src/app/        dashboard Streamlit
-tests/          kiểm thử tự động
+tests/          kiểm thử tự động (công thức, xếp hạng, SQLite, collector, client)
+docs/           tài liệu bổ sung (từ điển dữ liệu đầy đủ)
 data/           cơ sở dữ liệu SQLite
-docs/  tài liệu bổ sung (từ điển dữ liệu đầy đủ)
 ```
 
 ## 10. Luồng xử lý dữ liệu
@@ -157,7 +167,8 @@ trống), `stock_type`, `updated_at`.
 Cơ sở dữ liệu dùng chế độ WAL của SQLite, nên khi mở sẽ sinh thêm hai file tạm
 `market_data.db-wal` và `market_data.db-shm` (đã được `.gitignore` loại). Mỗi lần khởi tạo,
 chương trình cũng kiểm tra và tạo bảng nếu thiếu.
-Từ điển đầy đủ gồm cả các chỉ tiêu và điểm số xem tại docs/data_dictionary.md
+
+Từ điển đầy đủ gồm cả các chỉ tiêu và điểm số xem tại `docs/data_dictionary.md`.
 
 ## 12. Mô hình xếp hạng
 
@@ -199,3 +210,7 @@ Hệ số Beta và Sharpe Ratio không nằm trong điểm tổng hợp. Chi ti�
 - Múi giờ: `trading_date` theo ngày giao dịch Việt Nam, còn `updated_at` dùng giờ UTC mặc định
   của SQLite và nhật ký thu thập dùng giờ máy của người chạy, nên các mốc thời gian ghi nhận
   chưa thống nhất theo UTC+7.
+- Chưa kiểm thử giao diện dashboard và chưa kiểm thử gọi SSI thật; các test dùng dữ liệu giả
+  lập (xem mục 8).
+- Hàm lưu dữ liệu vào SQLite chưa xử lý dòng có mã chứng khoán trống. Trường hợp này được loại
+  ở bước chuẩn hóa của collector nên không xảy ra trong luồng xử lý thực tế.
