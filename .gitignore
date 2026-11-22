@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+*.log
+.streamlit/secrets.toml
+.vscode/
+.idea/
+.DS_Store
+
+# DB đầy đủ và bản sao lưu: chỉ giữ trên máy, không đưa lên
+data/market_data_full.db
+data/market_data_backup.db
+data/*.db-wal
+data/*.db-shm
+data/*.db-journal
