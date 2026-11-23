@@ -1,14 +1,29 @@
-
+import os
 import sqlite3
 from pathlib import Path
 from contextlib import contextmanager
 
 import pandas as pd
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+DEFAULT_DB_PATH = "data/market_data.db"
 
 
 class StockDatabase:
 
-    def __init__(self, db_path="data/market_data.db"):
+    def __init__(self, db_path=None):
+
+        # Thứ tự ưu tiên: tham số truyền vào, biến môi trường
+        # DATABASE_PATH (trong .env), rồi mới đến đường dẫn mặc định.
+        if db_path is None:
+            db_path = (
+                os.getenv("DATABASE_PATH", "").strip()
+                or DEFAULT_DB_PATH
+            )
+
         self.db_path = Path(db_path)
 
         self.db_path.parent.mkdir(

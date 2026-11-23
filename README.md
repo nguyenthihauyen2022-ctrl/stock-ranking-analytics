@@ -6,6 +6,13 @@
 > Điểm số chỉ là thứ hạng tương đối giữa các cổ phiếu trong tập được phân tích,
 > không phải xác suất tăng giá hay lợi nhuận kỳ vọng.
 
+## Chạy nhanh (không cần API key)
+
+1. Cài thư viện: `python -m venv .venv`, kích hoạt môi trường, rồi `pip install -r requirements.txt`
+   (chi tiết ở mục 4).
+2. Từ **thư mục gốc dự án**, chạy: `streamlit run src/app/dashboard.py`
+3. Lần mở đầu mất khoảng 30 giây để tính xếp hạng toàn thị trường; sau đó chuyển trang diễn ra ngay.
+
 ## 1. Mục tiêu và người dùng
 
 Sản phẩm sàng lọc và xếp hạng cổ phiếu trên HOSE, HNX và UPCoM bằng mô hình đa tiêu chí gồm
@@ -18,8 +25,7 @@ tích cần một bước sàng lọc định lượng dựa trên dữ liệu g
 - Dữ liệu lấy từ **SSI FastConnect API**.
 - Endpoint sử dụng: danh sách chứng khoán theo sàn (`securitiesByBoard`) và dữ liệu OHLC ngày (`ohlc`).
 - Các trường lấy về: giá mở cửa, cao nhất, thấp nhất, đóng cửa, khối lượng và giá trị giao dịch.
-- Dữ liệu là dữ liệu thật thu thập từ SSI, không có dữ liệu giả hay dữ liệu mô phỏng trong
-  bộ dữ liệu đi kèm. Riêng các bài kiểm thử tự động dùng dữ liệu giả lập, xem mục 8.
+- Dữ liệu là dữ liệu thật thu thập từ SSI, không có dữ liệu giả hay dữ liệu mô phỏng.
 - Sản phẩm **không** dùng dữ liệu tài khoản cá nhân và **không** gửi lệnh giao dịch.
 
 ## 3. Dữ liệu đi kèm
@@ -46,6 +52,9 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+Nếu PowerShell chặn việc kích hoạt môi trường ảo, chạy lệnh sau trong cùng cửa sổ rồi kích hoạt lại:
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+
 macOS / Linux:
 
 ```
@@ -63,18 +72,19 @@ Chỉ cần cấu hình khi muốn thu thập dữ liệu mới; xem dashboard v
 |---|---|---|
 | `SSI_API_KEY`, `SSI_API_SECRET` | Khóa SSI API của bạn (bắt buộc khi chạy collector) | không có |
 | `SSI_BASE_URL` | Địa chỉ SSI API | `https://api.ssi.com.vn` |
+| `DATABASE_PATH` | File SQLite lưu dữ liệu. Chỉ đặt khi muốn tách dữ liệu thu thập mới khỏi dữ liệu mẫu | `data/market_data.db` |
 | `BOARDS` | Các sàn cần thu thập | `HOSE,HNX,UPCOM` |
 | `MAX_SYMBOLS` | Giới hạn số mã khi thử nghiệm (0 là không giới hạn) | `0` |
 | `LOOKBACK_DAYS` | Số ngày lịch lấy lùi cho mã mới | `450` |
 | `PAGE_SIZE`, `MAX_PAGES` | Phân trang khi gọi OHLC | `1000`, `100` |
 | `REQUEST_DELAY` | Giây nghỉ giữa các yêu cầu, để không gọi dày đặc | `0.15` |
 | `OVERLAP_DAYS` | Số ngày lấy chồng khi cập nhật thêm, để vá dữ liệu bị sửa | `7` |
-| `SUPPLEMENTAL_SYMBOLS` | Mã bổ sung ngoài danh sách SSI trả về | `HPG` |
+| `MIN_HISTORY` | Chỉ dùng để ghi nhật ký; ngưỡng thực tế 127 phiên được đặt trong `src/finance/metrics.py` | `127` |
+
 
 ## 6. Chạy dashboard
 
-Chạy từ **thư mục gốc dự án** (vì cơ sở dữ liệu được mở bằng đường dẫn tương đối
-`data/market_data.db`):
+Chạy từ **thư mục gốc dự án** (vì các đường dẫn dữ liệu là đường dẫn tương đối):
 
 ```
 streamlit run src/app/dashboard.py
@@ -85,17 +95,27 @@ toàn thị trường nên mất khoảng 30 giây; các lần chuyển trang sa
 
 ## 7. Thu thập dữ liệu mới (tùy chọn)
 
-Cần SSI API key riêng đã điền trong `.env`. Chạy từ thư mục gốc dự án:
+Mặc định dashboard dùng dữ liệu mẫu đi kèm (`data/market_data.db`). Để thu thập dữ liệu mới nhất
+mà **không ghi đè dữ liệu mẫu**:
 
-```
-python -m src.data.collector
-```
+1. Sao chép `.env.example` thành `.env`.
+2. Điền `SSI_API_KEY` và `SSI_API_SECRET` bằng khóa SSI của bạn.
+3. Bỏ dấu `#` ở đầu dòng `# DATABASE_PATH=data/market_data_latest.db` để dữ liệu mới được lưu
+   vào file riêng.
+4. Chạy từ thư mục gốc dự án: `python -m src.data.collector`
+5. Chạy dashboard: `streamlit run src/app/dashboard.py`. Dashboard đọc cùng file khai báo trong
+   `.env` nên sẽ hiển thị dữ liệu mới.
+
+Muốn quay lại xem dữ liệu mẫu, thêm lại dấu `#` vào dòng `DATABASE_PATH` rồi chạy lại dashboard.
 
 Lưu ý:
-- Collector lấy toàn bộ thị trường (khoảng 1.500 mã) nên lần đầu mất vài phút.
+- File mới còn trống nên lần chạy đầu collector lấy khoảng 450 ngày lịch cho toàn bộ thị trường
+  (khoảng 1.500 mã), mất vài phút đến hơn chục phút.
+- Nếu bỏ dấu `#` mà chưa chạy collector, dashboard sẽ báo chưa có dữ liệu giá.
 - Mỗi API key chỉ giữ một phiên đăng nhập, không chạy hai nơi cùng lúc bằng một key.
 - Dashboard chỉ đọc dữ liệu đã lưu, không tự gọi API. Sau khi chạy collector cần khởi động lại
   dashboard để thấy dữ liệu mới.
+- Các lệnh phải chạy từ thư mục gốc dự án, nơi có file `.env`.
 
 ## 8. Kiểm thử
 
@@ -103,14 +123,9 @@ Lưu ý:
 python -m pytest
 ```
 
-Bộ kiểm thử gồm 191 test, phủ: công thức chỉ tiêu tài chính, quy tắc xếp hạng và điều kiện đủ
-dữ liệu, phân tích độ nhạy trọng số, tầng SQLite, chuẩn hóa dữ liệu SSI và xử lý lỗi kết nối
-(401, 429, lỗi máy chủ, JSON hỏng).
-
-Lưu ý: dữ liệu trong các test là dữ liệu giả lập, chỉ dùng để kiểm tra logic tính toán, không
-phải dữ liệu thị trường. Test dùng cơ sở dữ liệu tạm và phản hồi giả lập nên không cần mạng,
-không cần API key và không ghi vào `data/market_data.db`. Kết quả xếp hạng trên dashboard được
-tính từ dữ liệu thật thu thập từ SSI.
+Bộ kiểm thử gồm kiểm thử đơn vị cho các công thức, quy tắc xếp hạng, tầng dữ liệu SQLite,
+chuẩn hóa dữ liệu SSI và xử lý lỗi kết nối. Các test không gọi mạng, không cần khóa API và không
+ghi vào cơ sở dữ liệu thật.
 
 ## 9. Cấu trúc thư mục
 
@@ -120,7 +135,7 @@ src/data/       thu thập dữ liệu và lưu SQLite
 src/finance/    tính các chỉ tiêu tài chính
 src/analytics/  chấm điểm, xếp hạng và phân tích độ nhạy
 src/app/        dashboard Streamlit
-tests/          kiểm thử tự động (công thức, xếp hạng, SQLite, collector, client)
+tests/          kiểm thử tự động
 docs/           tài liệu bổ sung (từ điển dữ liệu đầy đủ)
 data/           cơ sở dữ liệu SQLite
 ```
@@ -168,7 +183,8 @@ Cơ sở dữ liệu dùng chế độ WAL của SQLite, nên khi mở sẽ sinh
 `market_data.db-wal` và `market_data.db-shm` (đã được `.gitignore` loại). Mỗi lần khởi tạo,
 chương trình cũng kiểm tra và tạo bảng nếu thiếu.
 
-Từ điển đầy đủ gồm cả các chỉ tiêu và điểm số xem tại `docs/data_dictionary.md`.
+Từ điển đầy đủ, gồm cả các chỉ tiêu và điểm số do hệ thống tính ra, xem tại
+`docs/data_dictionary.md`.
 
 ## 12. Mô hình xếp hạng
 
@@ -210,7 +226,3 @@ Hệ số Beta và Sharpe Ratio không nằm trong điểm tổng hợp. Chi ti�
 - Múi giờ: `trading_date` theo ngày giao dịch Việt Nam, còn `updated_at` dùng giờ UTC mặc định
   của SQLite và nhật ký thu thập dùng giờ máy của người chạy, nên các mốc thời gian ghi nhận
   chưa thống nhất theo UTC+7.
-- Chưa kiểm thử giao diện dashboard và chưa kiểm thử gọi SSI thật; các test dùng dữ liệu giả
-  lập (xem mục 8).
-- Hàm lưu dữ liệu vào SQLite chưa xử lý dòng có mã chứng khoán trống. Trường hợp này được loại
-  ở bước chuẩn hóa của collector nên không xảy ra trong luồng xử lý thực tế.

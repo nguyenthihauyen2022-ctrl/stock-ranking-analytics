@@ -15,3 +15,6 @@ data/market_data_backup.db
 data/*.db-wal
 data/*.db-shm
 data/*.db-journal
+
+# Dữ liệu người dùng tự thu thập (khi đặt DATABASE_PATH trong .env)
+data/market_data_latest.db
