@@ -35,6 +35,11 @@ st.caption(
     "Phân tích cổ phiếu Việt Nam dựa trên động lượng giá, "
     "hiệu suất điều chỉnh rủi ro và thanh khoản."
 )
+st.caption(
+    "Công cụ phân tích học thuật, không phải khuyến nghị đầu tư. "
+    "Điểm số là thứ hạng tương đối giữa các cổ phiếu trong tập được phân tích, "
+    "không phải xác suất tăng giá hay lợi nhuận kỳ vọng."
+)
 
 
 # ============================================================
@@ -1530,6 +1535,30 @@ def render_metric_guide():
     st.caption(
         "Tổng điểm được tính bằng tổng điểm của năm nhóm tiêu chí "
         "nhân với trọng số tương ứng. Tổng trọng số bằng 100%."
+    )
+
+    st.divider()
+
+    st.subheader("8. Giới hạn của sản phẩm")
+
+    st.markdown(
+        """
+        - Đây là công cụ phân tích học thuật, **không phải khuyến nghị đầu tư**.
+          Điểm số chỉ có ý nghĩa tương đối giữa các cổ phiếu trong tập được phân tích.
+        - Mô hình chỉ dùng dữ liệu giá và giao dịch trong quá khứ; không đánh giá
+          cơ bản doanh nghiệp (ROE, EPS, P/E...).
+        - Giá chưa được điều chỉnh cho sự kiện doanh nghiệp (chia tách, thưởng cổ phiếu).
+        - Trọng số là lựa chọn thiết kế, chưa được tối ưu; thứ hạng nhóm đầu có thể
+          thay đổi khi đổi trọng số (xem trang Kiểm định mô hình).
+        - Chưa có kiểm định ngoài mẫu hoặc backtest.
+        - Phân tích ngành phụ thuộc vào dữ liệu ngành SSI trả về; một số mã có thể thiếu ngành.
+        - Giá trị giao dịch có thể là giá trị ước tính (Giá đóng cửa × Khối lượng)
+          khi dữ liệu không đầy đủ.
+        - Mã không còn trong danh sách hiện tại của SSI (ví dụ đã hủy niêm yết) không
+          được đưa vào phân tích, nên kết quả có thể chịu sai lệch sống sót.
+        - Dữ liệu phụ thuộc vào lần thu thập gần nhất. Dashboard chỉ đọc dữ liệu đã lưu,
+          không tự gọi API; xem ngày dữ liệu mới nhất ở trang Tổng quan và Trạng thái dữ liệu.
+        """
     )
 
 
